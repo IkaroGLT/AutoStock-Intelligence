@@ -138,7 +138,6 @@ O primeiro componente configurado é o Button.
 Para adicionar outros componentes:
 
 ```powershell
-cd frontend
 npx shadcn@latest add nome-do-componente
 ```
 

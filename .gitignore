@@ -6,7 +6,7 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
-httpx2
+
 
 # Node e React
 node_modules/
