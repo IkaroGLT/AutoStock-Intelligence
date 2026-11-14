@@ -197,15 +197,71 @@ const initialMovements: Movement[] = [
     after: 2,
   },
 ];
-const trendData = [
-  { day: "31/Out", total: 1080 },
-  { day: "01/Nov", total: 1120 },
-  { day: "02/Nov", total: 1160 },
-  { day: "03/Nov", total: 1165 },
-  { day: "04/Nov", total: 1215 },
-  { day: "05/Nov", total: 1185 },
-  { day: "06/Nov", total: 1247 },
-];
+// Datas locais, sem conversão para UTC, para respeitar o dia selecionado.
+function localDateValue(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function movementDate(value: string): Date | null {
+  const match = value.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/,
+  );
+  if (match) {
+    const parsed = new Date(
+      Number(match[3]),
+      Number(match[2]) - 1,
+      Number(match[1]),
+      Number(match[4] ?? 0),
+      Number(match[5] ?? 0),
+    );
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Demonstração local: reconstrói saldos a partir das movimentações registradas.
+// Dias anteriores ao primeiro lançamento ficam sem dados, não são inventados.
+function buildStockHistory(
+  products: Product[],
+  movements: Movement[],
+  period: string,
+  referenceDate: string,
+): { day: string; total: number | null }[] {
+  const [year, month, day] = referenceDate.split("-").map(Number);
+  const selected = new Date(year, month - 1, day);
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const end = Number.isNaN(selected.getTime()) || selected.getTime() > todayStart.getTime()
+    ? todayStart
+    : selected;
+  const numberOfDays = period.includes("90") ? 90 : period.includes("30") ? 30 : 7;
+  const currentUnits = products.reduce((sum, product) => sum + product.stock, 0);
+  const datedMovements = movements
+    .map((movement) => ({ timestamp: movementDate(movement.date)?.getTime(), delta: movement.quantity }))
+    .filter((movement): movement is { timestamp: number; delta: number } =>
+      movement.timestamp !== undefined && Number.isFinite(movement.timestamp),
+    );
+  const firstEvent = datedMovements.length
+    ? Math.min(...datedMovements.map((movement) => movement.timestamp))
+    : Number.POSITIVE_INFINITY;
+
+  return Array.from({ length: numberOfDays }, (_, index) => {
+    const currentDay = new Date(end.getFullYear(), end.getMonth(), end.getDate() - numberOfDays + index + 1);
+    const dayEnd = new Date(currentDay.getFullYear(), currentDay.getMonth(), currentDay.getDate(), 23, 59, 59, 999).getTime();
+    const label = `${String(currentDay.getDate()).padStart(2, "0")}/${String(currentDay.getMonth() + 1).padStart(2, "0")}`;
+    if (dayEnd < firstEvent && localDateValue(currentDay) !== localDateValue(today)) {
+      return { day: label, total: null };
+    }
+    const subsequentDelta = datedMovements
+      .filter((movement) => movement.timestamp > dayEnd)
+      .reduce((sum, movement) => sum + movement.delta, 0);
+    return { day: label, total: currentUnits - subsequentDelta };
+  });
+}
 const money = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -231,7 +287,8 @@ function App() {
   useEffect(() => {
     localStorage.setItem("autostock-movements", JSON.stringify(movements));
   }, [movements]);
-  const [query, setQuery] = useState("");
+  const [globalQuery, setGlobalQuery] = useState("");
+  const [productQuery, setProductQuery] = useState("");
   const [category, setCategory] = useState("Todas");
   const [status, setStatus] = useState("Todas");
   const [modal, setModal] = useState<
@@ -261,25 +318,22 @@ function App() {
     reason: "",
   });
   const [period, setPeriod] = useState("Últimos 7 dias");
+  const [referenceDate, setReferenceDate] = useState(() => localDateValue(new Date()));
 
   const low = products.filter(
     (p) => p.stock > 0 && p.stock <= p.minimum,
   ).length;
   const empty = products.filter((p) => p.stock === 0).length;
-  const totalUnits = products.reduce((sum, p) => sum + p.stock, 0) + 1200;
+  const totalUnits = products.reduce((sum, p) => sum + p.stock, 0);
   const stockValue =
-    products.reduce((sum, p) => sum + p.stock * p.price, 0) + 23600;
-  const filteredProducts = useMemo(
-    () =>
-      products.filter(
-        (p) =>
-          (p.name.toLowerCase().includes(query.toLowerCase()) ||
-            p.sku.toLowerCase().includes(query.toLowerCase())) &&
-          (category === "Todas" || p.category === category) &&
-          (status === "Todas" || p.status === status),
-      ),
-    [products, query, category, status],
-  );
+    products.reduce((sum, p) => sum + p.stock * p.price, 0);
+  const filteredProducts = useMemo(() => products.filter((p) => {
+    const searchable = `${p.name} ${p.sku} ${p.category}`.toLowerCase();
+    return searchable.includes(globalQuery.trim().toLowerCase()) &&
+      searchable.includes(productQuery.trim().toLowerCase()) &&
+      (category === "Todas" || p.category === category) &&
+      (status === "Todas" || p.status === status);
+  }), [products, globalQuery, productQuery, category, status]);
 
   const toast = (message: string) => {
     setNotice(message);
@@ -494,9 +548,9 @@ function App() {
           <div className="global-search">
             <Search size={18} />
             <input
-              value={query}
+              value={globalQuery}
               onChange={(e) => {
-                setQuery(e.target.value);
+                setGlobalQuery(e.target.value);
                 if (e.target.value) setPage("Produtos");
               }}
               placeholder="Buscar produto, SKU ou categoria..."
@@ -544,6 +598,8 @@ function App() {
               stockValue={stockValue}
               period={period}
               setPeriod={setPeriod}
+              referenceDate={referenceDate}
+              setReferenceDate={setReferenceDate}
               onGo={go}
               onAdd={() => setModal("product")}
               onMovement={() => setModal("movement")}
@@ -557,8 +613,9 @@ function App() {
           {page === "Produtos" && (
             <ProductsPage
               products={filteredProducts}
-              query={query}
-              setQuery={setQuery}
+              query={productQuery}
+              setQuery={setProductQuery}
+              clearGlobalQuery={() => setGlobalQuery("")}
               category={category}
               setCategory={setCategory}
               status={status}
@@ -973,6 +1030,8 @@ function Dashboard({
   stockValue,
   period,
   setPeriod,
+  referenceDate,
+  setReferenceDate,
   onGo,
   onAdd,
   onMovement,
@@ -987,12 +1046,18 @@ function Dashboard({
   stockValue: number;
   period: string;
   setPeriod: (value: string) => void;
+  referenceDate: string;
+  setReferenceDate: (value: string) => void;
   onGo: (page: Page) => void;
   onAdd: () => void;
   onMovement: () => void;
   onImport: () => void;
   onCorrect: (movement: Movement) => void;
 }) {
+  const historyData = useMemo(
+    () => buildStockHistory(products, movements, period, referenceDate),
+    [products, movements, period, referenceDate],
+  );
   const pieData = [
     {
       name: "Em estoque",
@@ -1013,39 +1078,43 @@ function Dashboard({
           </h1>
           <p className="muted">Aqui está o resumo do seu estoque hoje.</p>
         </div>
-        <div className="date-chip">
-          <CalendarDays size={17} /> Qui, 06 de Nov de 2026{" "}
-          <ChevronDown size={16} />
-        </div>
+        <label className="date-chip" title="Data final da análise de evolução do estoque">
+          <CalendarDays size={17} />
+          <span>Até</span>
+          <input
+            aria-label="Data final da análise de evolução do estoque"
+            type="date"
+            value={referenceDate}
+            max={localDateValue(new Date())}
+            onChange={(e) => setReferenceDate(e.target.value)}
+            style={{ background: "transparent", color: "inherit", border: 0, colorScheme: "dark", font: "inherit" }}
+          />
+        </label>
       </div>
       <div className="stats-grid">
         <Stat
           icon={<Package />}
           label="Total de Produtos"
-          value={String(products.length + 42)}
-          trend="+4,2% (7 dias)"
-          positive
+          value={String(products.length)}
+          trend="Cadastros atuais"
         />
         <Stat
           icon={<Boxes />}
           label="Itens em Estoque"
           value={totalUnits.toLocaleString("pt-BR")}
-          trend="+8,5% (7 dias)"
-          positive
+          trend="Saldo atual"
         />
         <Stat
           icon={<AlertTriangle />}
           label="Abaixo do Mínimo"
-          value={String(low + 1)}
-          trend="-20% (7 dias)"
-          positive={false}
+          value={String(low)}
+          trend="Situação atual"
         />
         <Stat
           icon={<TrendingUp />}
           label="Valor em Estoque"
           value={money(stockValue)}
-          trend="+6,1% (7 dias)"
-          positive
+          trend="Valor atual"
         />
       </div>
       <div className="dashboard-grid">
@@ -1055,7 +1124,7 @@ function Dashboard({
               <ChartNoAxesCombined className="gold-icon" />
               <div>
                 <h3>Evolução do Estoque</h3>
-                <small>Quantidade total de itens no período</small>
+                <small>Estimativa pelas movimentações registradas; dias sem histórico não são preenchidos</small>
               </div>
             </div>
             <select
@@ -1069,8 +1138,9 @@ function Dashboard({
             </select>
           </div>
           <div className="chart-wrap">
+            {historyData.some((point) => point.total !== null) ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData}>
+              <AreaChart data={historyData}>
                 <defs>
                   <linearGradient id="goldFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#e9b84f" stopOpacity={0.35} />
@@ -1117,6 +1187,9 @@ function Dashboard({
                 />
               </AreaChart>
             </ResponsiveContainer>
+            ) : (
+              <Empty text="Sem movimentações suficientes para analisar a data selecionada." />
+            )}
           </div>
         </section>
         <section className="panel status-panel">
@@ -1142,7 +1215,7 @@ function Dashboard({
                 </PieChart>
               </ResponsiveContainer>
               <div className="donut-center">
-                <b>{products.length + 42}</b>
+                <b>{products.length}</b>
                 <small>Produtos</small>
               </div>
             </div>
@@ -1249,7 +1322,7 @@ function Stat({
   label: string;
   value: React.ReactNode;
   trend: string;
-  positive: boolean;
+  positive?: boolean;
 }) {
   return (
     <div className="stat-card">
@@ -1257,8 +1330,8 @@ function Stat({
       <div className="stat-content">
         <span>{label}</span>
         <strong>{value}</strong>
-        <small className={positive ? "trend-up" : "trend-down"}>
-          {positive ? "▲" : "▼"} {trend}
+        <small className={positive === undefined ? "muted" : positive ? "trend-up" : "trend-down"}>
+          {positive === undefined ? "" : positive ? "▲ " : "▼ "}{trend}
         </small>
       </div>
     </div>
@@ -1268,6 +1341,7 @@ function ProductsPage({
   products,
   query,
   setQuery,
+  clearGlobalQuery,
   category,
   setCategory,
   status,
@@ -1278,6 +1352,7 @@ function ProductsPage({
   products: Product[];
   query: string;
   setQuery: (value: string) => void;
+  clearGlobalQuery: () => void;
   category: string;
   setCategory: (value: string) => void;
   status: string;
@@ -1332,6 +1407,7 @@ function ProductsPage({
             className="btn btn-outline"
             onClick={() => {
               setQuery("");
+              clearGlobalQuery();
               setCategory("Todas");
               setStatus("Todas");
             }}
@@ -1686,7 +1762,7 @@ function ReportsPage({
         <Stat
           icon={<Package />}
           label="Produtos cadastrados"
-          value={products.length + 42}
+          value={products.length}
           trend="Catálogo ativo"
           positive
         />
