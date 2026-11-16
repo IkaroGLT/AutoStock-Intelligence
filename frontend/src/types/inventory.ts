@@ -22,3 +22,23 @@ export type Movement = {
   note?: string;
   correctionOf?: number;
 };
+
+export type ProductFormState = {
+  name: string;
+  sku: string;
+  category: string;
+  stock: string;
+  minimum: string;
+  price: string;
+};
+
+export type MovementFormState = {
+  productId: string;
+  type: string;
+  quantity: string;
+};
+
+export type CorrectionFormState = {
+  quantity: string;
+  reason: string;
+};
