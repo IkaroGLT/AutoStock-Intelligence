@@ -47,6 +47,8 @@ import {
   YAxis,
   Cell,
 } from "recharts";
+import type { Movement, Product } from "./types/inventory";
+import { normalizeSku, resolveMovementProduct, stockStatus, validateProduct } from "./lib/inventory";
 type Page =
   | "Dashboard"
   | "Produtos"
@@ -56,27 +58,6 @@ type Page =
   | "Automação"
   | "Usuários"
   | "Configurações";
-type Product = {
-  id: number;
-  name: string;
-  sku: string;
-  category: string;
-  stock: number;
-  minimum: number;
-  price: number;
-  status: "Em estoque" | "Abaixo do mínimo" | "Sem estoque";
-};
-type Movement = {
-  id: number;
-  product: string;
-  type: "Entrada" | "Saída" | "Correção";
-  quantity: number;
-  date: string;
-  before: number;
-  after: number;
-  note?: string;
-};
-
 const initialProducts: Product[] = [
   {
     id: 1,
@@ -265,6 +246,15 @@ function buildStockHistory(
 const money = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+const emptyProductForm = {
+  name: "",
+  sku: "",
+  category: "Brinquedos",
+  stock: "0",
+  minimum: "5",
+  price: "0",
+};
+
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
     const saved = localStorage.getItem(key);
@@ -292,24 +282,18 @@ function App() {
   const [category, setCategory] = useState("Todas");
   const [status, setStatus] = useState("Todas");
   const [modal, setModal] = useState<
-    "product" | "movement" | "correction" | "login" | null
+    "product" | "edit-product" | "view-product" | "movement" | "correction" | "login" | null
   >(null);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
   );
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [loggedIn, setLoggedIn] = useState(true);
-  const [productForm, setProductForm] = useState({
-    name: "",
-    sku: "",
-    category: "Brinquedos",
-    stock: "0",
-    minimum: "5",
-    price: "0",
-  });
+  const [productForm, setProductForm] = useState({ ...emptyProductForm });
   const [movementForm, setMovementForm] = useState({
-    product: initialProducts[0].name,
+    productId: String(initialProducts[0].id),
     type: "Entrada",
     quantity: "1",
   });
@@ -319,6 +303,28 @@ function App() {
   });
   const [period, setPeriod] = useState("Últimos 7 dias");
   const [referenceDate, setReferenceDate] = useState(() => localDateValue(new Date()));
+  const selectedProduct = products.find((product) => product.id === selectedProductId);
+  const correctingProduct = selectedMovement
+    ? resolveMovementProduct(products, selectedMovement)
+    : undefined;
+
+  function openProductForm(product?: Product) {
+    setSelectedProductId(product?.id ?? null);
+    setProductForm(product ? {
+      name: product.name,
+      sku: product.sku,
+      category: product.category,
+      stock: String(product.stock),
+      minimum: String(product.minimum),
+      price: String(product.price),
+    } : { ...emptyProductForm });
+    setModal(product ? "edit-product" : "product");
+  }
+
+  function viewProduct(product: Product) {
+    setSelectedProductId(product.id);
+    setModal("view-product");
+  }
 
   const low = products.filter(
     (p) => p.stock > 0 && p.stock <= p.minimum,
@@ -356,43 +362,45 @@ function App() {
 
   function saveProduct(e: FormEvent) {
     e.preventDefault();
-    if (!productForm.name.trim() || !productForm.sku.trim())
-      return toast("Preencha nome e SKU do produto.");
-    const stock = Number(productForm.stock),
-      minimum = Number(productForm.minimum);
-    setProducts((prev) => [
-      {
-        id: Math.max(...prev.map((p) => p.id), 0) + 1,
-        name: productForm.name,
-        sku: productForm.sku,
-        category: productForm.category,
-        stock,
-        minimum,
-        price: Number(productForm.price),
-        status:
-          stock === 0
-            ? "Sem estoque"
-            : stock <= minimum
-              ? "Abaixo do mínimo"
-              : "Em estoque",
-      },
-      ...prev,
-    ]);
-    setProductForm({
-      name: "",
-      sku: "",
-      category: "Brinquedos",
-      stock: "0",
-      minimum: "5",
-      price: "0",
-    });
+    const editing = modal === "edit-product";
+    if (editing && !selectedProduct) return toast("Produto não encontrado.");
+    const error = validateProduct(productForm, products, editing ? selectedProduct?.id ?? null : null);
+    if (error) return toast(error);
+    const minimum = Number(productForm.minimum);
+    const values = {
+      name: productForm.name.trim(),
+      sku: normalizeSku(productForm.sku),
+      category: productForm.category,
+      minimum,
+      price: Number(productForm.price),
+    };
+    if (editing && selectedProduct) {
+      setProducts((prev) => prev.map((product) => product.id === selectedProduct.id
+        ? { ...product, ...values, status: stockStatus(product.stock, minimum) }
+        : product,
+      ));
+    } else {
+      const stock = Number(productForm.stock);
+      setProducts((prev) => [
+        {
+          id: Math.max(...prev.map((p) => p.id), 0) + 1,
+          ...values,
+          stock,
+          status: stockStatus(stock, minimum),
+        },
+        ...prev,
+      ]);
+    }
+    setProductForm({ ...emptyProductForm });
+    setSelectedProductId(null);
     setModal(null);
-    toast("Produto cadastrado com sucesso!");
+    toast(editing ? "Produto atualizado com sucesso!" : "Produto cadastrado com sucesso!");
   }
   function saveMovement(e: FormEvent) {
     e.preventDefault();
-    const qty = Math.max(1, Number(movementForm.quantity));
-    const product = products.find((p) => p.name === movementForm.product);
+    const qty = Number(movementForm.quantity);
+    if (!Number.isInteger(qty) || qty <= 0) return toast("Informe uma quantidade inteira e positiva.");
+    const product = products.find((p) => p.id === Number(movementForm.productId));
     if (!product) return toast("Selecione um produto válido.");
     if (movementForm.type === "Saída" && product.stock < qty)
       return toast("Estoque insuficiente para essa saída.");
@@ -404,12 +412,7 @@ function App() {
           ? {
               ...p,
               stock: after,
-              status:
-                after === 0
-                  ? "Sem estoque"
-                  : after <= p.minimum
-                    ? "Abaixo do mínimo"
-                    : "Em estoque",
+              status: stockStatus(after, p.minimum),
             }
           : p,
       ),
@@ -417,6 +420,7 @@ function App() {
     setMovements((prev) => [
       {
         id: Math.max(...prev.map((m) => m.id), 0) + 1,
+        productId: product.id,
         product: product.name,
         type: movementForm.type as "Entrada" | "Saída",
         quantity: movementForm.type === "Entrada" ? qty : -qty,
@@ -432,13 +436,17 @@ function App() {
   function saveCorrection(e: FormEvent) {
     e.preventDefault();
     if (!selectedMovement) return;
+    if (selectedMovement.type !== "Entrada") return toast("Apenas entradas podem ser corrigidas.");
+    if (movements.some((movement) => movement.correctionOf === selectedMovement.id)) {
+      return toast("Essa entrada já foi corrigida. Não é possível aplicar o ajuste duas vezes.");
+    }
     if (!correctionForm.quantity || !correctionForm.reason.trim())
       return toast("Quantidade correta e justificativa são obrigatórias.");
     const correct = Number(correctionForm.quantity);
-    if (correct < 0) return toast("A quantidade não pode ser negativa.");
+    if (!Number.isInteger(correct) || correct < 0) return toast("A quantidade deve ser um inteiro não negativo.");
     const delta = correct - Math.abs(selectedMovement.quantity);
-    const product = products.find((p) => p.name === selectedMovement.product);
-    if (!product) return toast("Produto não encontrado.");
+    const product = resolveMovementProduct(products, selectedMovement);
+    if (!product) return toast("Produto não identificado de forma única no histórico antigo.");
     const projected = product.stock + delta;
     if (projected < 0) return toast("A correção deixaria o estoque negativo.");
     setProducts((prev) =>
@@ -447,12 +455,7 @@ function App() {
           ? {
               ...p,
               stock: projected,
-              status:
-                projected === 0
-                  ? "Sem estoque"
-                  : projected <= p.minimum
-                    ? "Abaixo do mínimo"
-                    : "Em estoque",
+              status: stockStatus(projected, p.minimum),
             }
           : p,
       ),
@@ -460,6 +463,7 @@ function App() {
     setMovements((prev) => [
       {
         id: Math.max(...prev.map((m) => m.id), 0) + 1,
+        productId: product.id,
         product: product.name,
         type: "Correção",
         quantity: delta,
@@ -467,6 +471,7 @@ function App() {
         before: product.stock,
         after: projected,
         note: correctionForm.reason,
+        correctionOf: selectedMovement.id,
       },
       ...prev,
     ]);
@@ -601,7 +606,7 @@ function App() {
               referenceDate={referenceDate}
               setReferenceDate={setReferenceDate}
               onGo={go}
-              onAdd={() => setModal("product")}
+              onAdd={() => openProductForm()}
               onMovement={() => setModal("movement")}
               onImport={() =>
                 toast(
@@ -620,12 +625,9 @@ function App() {
               setCategory={setCategory}
               status={status}
               setStatus={setStatus}
-              onAdd={() => setModal("product")}
-              onEdit={() =>
-                toast(
-                  "Edição de cadastro: integração de atualização preparada para a API.",
-                )
-              }
+              onAdd={() => openProductForm()}
+              onView={viewProduct}
+              onEdit={openProductForm}
             />
           )}
           {page === "Estoque" && (
@@ -639,6 +641,10 @@ function App() {
               movements={movements}
               onAdd={() => setModal("movement")}
               onCorrect={(m) => {
+                if (!resolveMovementProduct(products, m)) {
+                  toast("Não foi possível identificar o produto dessa movimentação antiga com segurança.");
+                  return;
+                }
                 setSelectedMovement(m);
                 setCorrectionForm({
                   quantity: String(Math.abs(m.quantity)),
@@ -728,10 +734,43 @@ function App() {
         </div>
       </main>
 
-      {modal === "product" && (
+      {modal === "view-product" && selectedProduct && (
         <Modal
-          title="Cadastrar produto"
-          subtitle="Adicione um novo item ao catálogo."
+          title="Detalhes do produto"
+          subtitle="Consulte as informações do item selecionado."
+          onClose={() => setModal(null)}
+        >
+          <div className="form-grid">
+            {[
+              ["Identificador", String(selectedProduct.id)],
+              ["Nome", selectedProduct.name],
+              ["SKU", selectedProduct.sku],
+              ["Categoria", selectedProduct.category],
+              ["Quantidade", `${selectedProduct.stock} un.`],
+              ["Estoque mínimo", `${selectedProduct.minimum} un.`],
+              ["Preço unitário", money(selectedProduct.price)],
+              ["Situação", selectedProduct.status],
+            ].map(([label, value]) => (
+              <div className="field" key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+            <div className="form-actions">
+              <button className="btn btn-ghost" onClick={() => setModal(null)}>
+                Fechar
+              </button>
+              <button className="btn btn-primary" onClick={() => openProductForm(selectedProduct)}>
+                <Pencil size={16} /> Editar produto
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {(modal === "product" || modal === "edit-product") && (
+        <Modal
+          title={modal === "edit-product" ? "Editar produto" : "Cadastrar produto"}
+          subtitle={modal === "edit-product" ? "Atualize os dados cadastrais do item." : "Adicione um novo item ao catálogo."}
           onClose={() => setModal(null)}
         >
           <form onSubmit={saveProduct} className="form-grid">
@@ -769,20 +808,28 @@ function App() {
                 <option>Educativos</option>
               </select>
             </Field>
-            <Field label="Quantidade inicial">
+            <Field label={modal === "edit-product" ? "Saldo atual (somente leitura)" : "Quantidade inicial"}>
               <input
                 type="number"
                 min="0"
+                required
+                readOnly={modal === "edit-product"}
                 value={productForm.stock}
                 onChange={(e) =>
                   setProductForm({ ...productForm, stock: e.target.value })
                 }
               />
             </Field>
+            {modal === "edit-product" && (
+              <div className="info-note">
+                <ShieldCheck size={17} /> Altere o saldo somente em Movimentações para preservar o histórico.
+              </div>
+            )}
             <Field label="Estoque mínimo">
               <input
                 type="number"
                 min="0"
+                required
                 value={productForm.minimum}
                 onChange={(e) =>
                   setProductForm({ ...productForm, minimum: e.target.value })
@@ -794,6 +841,7 @@ function App() {
                 type="number"
                 min="0"
                 step="0.01"
+                required
                 value={productForm.price}
                 onChange={(e) =>
                   setProductForm({ ...productForm, price: e.target.value })
@@ -809,7 +857,7 @@ function App() {
                 Cancelar
               </button>
               <button className="btn btn-primary">
-                <Check size={16} /> Salvar produto
+                <Check size={16} /> {modal === "edit-product" ? "Salvar alterações" : "Salvar produto"}
               </button>
             </div>
           </form>
@@ -824,13 +872,13 @@ function App() {
           <form onSubmit={saveMovement} className="form-grid">
             <Field label="Produto">
               <select
-                value={movementForm.product}
+                value={movementForm.productId}
                 onChange={(e) =>
-                  setMovementForm({ ...movementForm, product: e.target.value })
+                  setMovementForm({ ...movementForm, productId: e.target.value })
                 }
               >
                 {products.map((p) => (
-                  <option key={p.id}>{p.name}</option>
+                  <option key={p.id} value={String(p.id)}>{p.name} — {p.sku}</option>
                 ))}
               </select>
             </Field>
@@ -932,7 +980,9 @@ function App() {
                 <b>
                   {correctionForm.quantity === ""
                     ? "—"
-                    : `${(products.find((p) => p.name === selectedMovement.product)?.stock ?? 0) + Number(correctionForm.quantity) - Math.abs(selectedMovement.quantity)} un.`}
+                    : correctingProduct
+                      ? `${correctingProduct.stock + Number(correctionForm.quantity) - Math.abs(selectedMovement.quantity)} un.`
+                      : "Produto não identificado"}
                 </b>
               </div>
             </div>
@@ -1347,6 +1397,7 @@ function ProductsPage({
   status,
   setStatus,
   onAdd,
+  onView,
   onEdit,
 }: {
   products: Product[];
@@ -1358,7 +1409,8 @@ function ProductsPage({
   status: string;
   setStatus: (value: string) => void;
   onAdd: () => void;
-  onEdit: () => void;
+  onView: (product: Product) => void;
+  onEdit: (product: Product) => void;
 }) {
   return (
     <>
@@ -1451,15 +1503,15 @@ function ProductsPage({
                   <td>
                     <button
                       className="table-icon"
-                      onClick={onEdit}
-                      aria-label="Ver produto"
+                      onClick={() => onView(p)}
+                      aria-label={`Ver produto ${p.name} (${p.sku})`}
                     >
                       <Eye size={16} />
                     </button>
                     <button
                       className="table-icon"
-                      onClick={onEdit}
-                      aria-label="Editar produto"
+                      onClick={() => onEdit(p)}
+                      aria-label={`Editar produto ${p.name} (${p.sku})`}
                     >
                       <Pencil size={16} />
                     </button>
@@ -1592,6 +1644,10 @@ function MovementsPage({
   const rows = movements.filter(
     (m: Movement) => filter === "Todas" || m.type === filter,
   );
+  const correctedMovementIds = new Set(
+    movements.filter((movement) => movement.correctionOf !== undefined)
+      .map((movement) => movement.correctionOf),
+  );
   return (
     <>
       <PageHeader
@@ -1620,7 +1676,7 @@ function MovementsPage({
           </select>
         </div>
         <div className="table-scroll">
-          <MovementTable movements={rows} onCorrect={onCorrect} />
+          <MovementTable movements={rows} onCorrect={onCorrect} correctedMovementIds={correctedMovementIds} />
         </div>
         <div className="table-footer">
           Correções são registradas como novos eventos; o lançamento original é
@@ -1634,10 +1690,12 @@ function MovementTable({
   movements,
   compact = false,
   onCorrect,
+  correctedMovementIds,
 }: {
   movements: Movement[];
   compact?: boolean;
   onCorrect: (movement: Movement) => void;
+  correctedMovementIds?: Set<number | undefined>;
 }) {
   return (
     <div className="table-scroll">
@@ -1685,8 +1743,9 @@ function MovementTable({
                     <button
                       className="btn btn-outline btn-small"
                       onClick={() => onCorrect(m)}
+                      disabled={correctedMovementIds?.has(m.id)}
                     >
-                      <RotateCcw size={14} /> Corrigir lançamento
+                      <RotateCcw size={14} /> {correctedMovementIds?.has(m.id) ? "Já corrigido" : "Corrigir lançamento"}
                     </button>
                   )}
                 </td>
