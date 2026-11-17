@@ -75,3 +75,33 @@ CREATE TABLE IF NOT EXISTS sincronizacoes (
 CREATE TRIGGER IF NOT EXISTS bloquear_delete_mov BEFORE DELETE ON movimentacoes_estoque BEGIN SELECT RAISE(ABORT, 'historico imutavel'); END;
 CREATE TRIGGER IF NOT EXISTS bloquear_update_mov BEFORE UPDATE ON movimentacoes_estoque BEGIN SELECT RAISE(ABORT, 'historico imutavel'); END;
 CREATE TRIGGER IF NOT EXISTS bloquear_delete_webhook BEFORE DELETE ON eventos_webhook BEGIN SELECT RAISE(ABORT, 'eventos nao podem ser excluidos'); END;
+
+
+-- Usuarios do sistema e controle de acesso.
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY,
+
+    nome TEXT NOT NULL
+        CHECK(length(trim(nome)) > 0),
+
+    email TEXT NOT NULL COLLATE NOCASE UNIQUE
+        CHECK(length(trim(email)) > 0),
+
+    senha_hash TEXT NOT NULL
+        CHECK(length(trim(senha_hash)) > 0),
+
+    papel TEXT NOT NULL
+        CHECK(papel IN ('ADMIN', 'OPERADOR')),
+
+    ativo INTEGER NOT NULL DEFAULT 1
+        CHECK(ativo IN (0, 1)),
+
+    criado_em TEXT NOT NULL
+        DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+
+    atualizado_em TEXT NOT NULL
+        DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_papel_ativo
+ON usuarios(papel, ativo);
