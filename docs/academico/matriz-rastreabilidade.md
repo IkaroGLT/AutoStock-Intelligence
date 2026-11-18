@@ -27,16 +27,25 @@ Estabelecer a ligação verificável entre **requisitos (RF/RNF)**, **histórias
 
 ### 1.2 Convenções
 
-| Código                       | Significado                                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------ |
-| `RF-xx`                      | Requisito funcional do documento de requisitos                                             |
-| `RNF-xx`                     | Requisito não funcional do documento de requisitos                                         |
-| `RN-xx`                      | Regra de negócio                                                                           |
-| `US-xx`                      | História de usuário do arquivo de BDD                                                      |
-| `CT-RFxx-yy` / `CT-RNFxx-yy` | **Identificadores propostos** de casos de teste, ainda não vinculados a testes executáveis |
-| `AS-xx`                      | Issue do projeto no GitHub                                                                 |
-| `P`                          | Planejado; execução e comprovação ainda não registradas                                    |
-| `EV-PENDENTE`                | Evidência real ainda precisa ser anexada ou vinculada                                      |
+| Código                       | Significado                                                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `RF-xx`                      | Requisito funcional do documento de requisitos                                                                         |
+| `RNF-xx`                     | Requisito não funcional do documento de requisitos                                                                     |
+| `RN-xx`                      | Regra de negócio                                                                                                       |
+| `US-xx`                      | História de usuário do arquivo de BDD                                                                                  |
+| `CT-RFxx-yy` / `CT-RNFxx-yy` | **Identificadores propostos** de casos de teste, ainda não vinculados a testes executáveis                             |
+| `AS-xx`                      | Issue do projeto no GitHub                                                                                             |
+| `P`                          | Planejado; execução e comprovação ainda não registradas                                                                |
+| `EV-PENDENTE`                | Evidência real ainda precisa ser anexada ou vinculada                                                                  |
+| `VQ`                         | Necessidade sustentada qualitativamente por pesquisa com participantes; não representa implementação ou teste aprovado |
+
+**Distinção entre validação de necessidade e validação técnica:**
+
+A classificação `VQ` indica que uma necessidade foi sustentada por relatos obtidos durante a elicitação.
+
+Ela não representa que o requisito esteja implementado, que um teste tenha sido executado ou que o sistema tenha atendido ao comportamento esperado.
+
+Os estados `PASS`, `FAIL`, `BLOCKED` e `NOT_RUN` continuam sendo utilizados exclusivamente para registrar a execução de testes.
 
 **Critério para marcar "Validado":** só depois de um teste de fato executado, com versão/commit, data, ambiente, resultado observado e link ou arquivo verificável. Não confundir um cenário Gherkin escrito com teste automatizado executado.
 
@@ -49,6 +58,32 @@ Em 10/11/2026, a **AS-01** (arquitetura/requisitos) e a **AS-02** (estrutura ini
 **Limite importante:** a existência dessas estruturas **não comprova** autenticação de usuários, CRUD completo, importações, webhooks funcionais no novo projeto, dashboard integrado ou previsão de demanda. O Mock Estoque API é uma **referência independente**, não evidência de implementação no AutoStock.
 
 Na consulta inicial desta matriz, as Issues [AS-03](https://github.com/IkaroGLT/AutoStock-Intelligence/issues/3) a [AS-12](https://github.com/IkaroGLT/AutoStock-Intelligence/issues/12) estavam abertas; o status deverá ser atualizado durante as sprints.
+
+### 2.1. Evidências qualitativas de necessidade — AS-11
+
+A pesquisa realizada entre 13 e 17 de novembro de 2026 reuniu quatro respostas consentidas de participantes com experiência direta em controle de estoque.
+
+Os resultados estão consolidados em [`validacao-as11.md`](validacao-as11.md).
+
+| ID do achado | Origem | Evidência observada                                                | Requisitos relacionados | Situação   |
+| ------------ | ------ | ------------------------------------------------------------------ | ----------------------- | ---------- |
+| ACH-01       | Q-02   | 4 de 4 participantes relataram conferência física diária           | RF-10, RF-11            | VQ         |
+| ACH-02       | Q-03   | Relatos de erros de contagem, cadastro, movimentação e organização | RF-05, RF-06, RF-07     | VQ         |
+| ACH-03       | Q-04   | Procedimentos manuais de conferência e correção de divergências    | RF-07, RF-13            | VQ         |
+| ACH-04       | Q-05   | Dois participantes mencionaram estoque mínimo                      | RF-10                   | VQ         |
+| ACH-05       | Q-07   | Interesse em quantidades disponíveis, saídas recentes e reposição  | RF-11                   | VQ         |
+| ACH-06       | Q-08   | Duas respostas explicitamente favoráveis à previsão de demanda     | RF-12                   | VQ parcial |
+
+**Limitações da evidência:**
+
+- A amostra contém apenas quatro respostas consentidas.
+- Algumas respostas relacionadas ao dashboard e à previsão foram ambíguas.
+
+**Interpretação:** os achados sustentam qualitativamente a necessidade dos requisitos relacionados a movimentações, histórico, alertas, dashboard e previsão. Não comprovam a implementação ou eficácia desses recursos.
+
+Os demais requisitos permanecem fundamentados em suas respectivas especificações e decisões técnicas.
+
+**Importante:** as evidências de elicitação não substituem os registros de execução dos casos `CT-RFxx-yy` e `CT-RNFxx-yy`. Portanto, as situações `EV-PENDENTE / P` das tabelas de implementação e testes devem permanecer inalteradas até que existam evidências técnicas correspondentes.
 
 ## 3. Matriz principal — Requisitos funcionais
 

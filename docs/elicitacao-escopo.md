@@ -13,6 +13,7 @@ Microempreendedores e empresas de médio porte frequentemente enfrentam dificuld
 **Objetivo:** identificar regras implementadas, riscos conhecidos, contratos existentes e funções reaproveitáveis.
 
 **Materiais examinados na preparação deste documento:**
+
 - `Mock_Estoque_API/README.md` e `docs/arquitetura.md` (escopo, endpoints, arquitetura e limitações).
 - `Mock_Estoque_API/schema.sql` e `app.py` (tabelas e regras de saldo/movimentações).
 - `Mock_Estoque_API/docs/contrato_integracao_vendas.md` (evento e idempotência).
@@ -29,6 +30,7 @@ Microempreendedores e empresas de médio porte frequentemente enfrentam dificuld
 **Amostra proposta:** entre 3 e 5 participantes com experiência prática; número final e perfil devem ser declarados no relatório. Não afirmar representatividade estatística.
 
 **Perguntas sugeridas:**
+
 1. Como você registra hoje entradas e saídas de estoque?
 2. Com que frequência confere fisicamente o estoque?
 3. Quais são os três erros mais comuns no processo?
@@ -40,7 +42,28 @@ Microempreendedores e empresas de médio porte frequentemente enfrentam dificuld
 
 **Evidências esperadas:** formulário utilizado, participantes anonimizados, respostas reais, data de aplicação, resumo por tema e decisões derivadas das respostas.
 
-**Status:** questionário planejado; **não aplicado ou validado neste documento**.
+**Status atualizado em 18/11/2026:** questionário planejado na AS-01 e aplicado entre 13 e 17 de novembro de 2026. Os resultados foram analisados na AS-11 e estão documentados em [`academico/validacao-as11.md`](academico/validacao-as11.md).
+
+### 3.1. Registro da aplicação — atualização AS-11
+
+A aplicação do questionário resultou em cinco registros de participação.
+
+Quatro participantes concordaram com a participação voluntária e declararam experiência direta com controle de estoque. Um registro sem consentimento foi excluído.
+
+Todos os quatro participantes consentidos relataram realizar conferências físicas diariamente.
+
+Os principais temas identificados foram:
+
+- Conferência física frequente.
+- Erros de contagem, cadastro e movimentação.
+- Divergências entre registros e estoque físico.
+- Procedimentos manuais de correção.
+- Interesse em informações de estoque mínimo e reposição.
+- Interesse na utilização de dados históricos para apoiar previsões.
+
+A amostra possui caráter exploratório e não representa estatisticamente o mercado.
+
+A análise detalhada e suas limitações estão registradas em [`academico/validacao-as11.md`](academico/validacao-as11.md).
 
 ## 4. Escopo aprovado para revisão
 

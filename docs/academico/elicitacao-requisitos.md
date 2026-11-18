@@ -1,12 +1,11 @@
 # AutoStock Intelligence — Elicitação de Requisitos e Registro de Evidências
 
-**Issue:** AS-11 — Documentação Técnica e Acadêmica
-**Versão:** 0.1 — Minuta para revisão
-**Data de referência:** 11/11/2026
-**Situação:** análise documental descrita na AS-01; questionário planejado e sem resultados registrados neste documento.
-**Destino proposto:** `docs/academico/elicitacao-requisitos.md`
+**Issue:** AS-11 — Documentação Técnica e Acadêmica  
+**Versão:** 0.2 — Atualização após aplicação do questionário  
+**Data de referência:** 18/11/2026  
+**Situação:** Análise documental registrada na AS-01 e questionário aplicado entre 13/11/2026 e 17/11/2026, com quatro respostas consentidas analisadas.
 
-> **Critério de integridade acadêmica:** uma técnica só pode ser declarada aplicada quando existirem evidências reais de sua execução. Campos não preenchidos são pendências, não resultados. Não incluir nomes, contatos ou outros dados identificáveis dos participantes no repositório público.
+> **Critério de integridade acadêmica:** uma técnica só pode ser declarada aplicada quando existirem evidências reais de sua execução. Não incluir nomes, contatos ou outros dados identificáveis dos participantes no repositório público.
 
 ## 1. Objetivo
 
@@ -75,94 +74,117 @@ Não atribuir nomes, datas ou conclusões adicionais sem documentação correspo
 
 ### 4.1 Objetivo e desenho da aplicação
 
-Investigar práticas reais de registro, frequência de conferência, falhas mais comuns e funcionalidades de maior utilidade para pessoas envolvidas em controle de estoque.
+O questionário teve como objetivo investigar práticas reais de registro, frequência de conferência, falhas comuns e funcionalidades consideradas úteis por pessoas envolvidas diretamente com controle de estoque.
 
-**Amostra inicialmente proposta na AS-01:** 3 a 5 pessoas com experiência prática, sujeita à quantidade efetivamente alcançada. A amostra deve ser intencional/por conveniência, caso assim seja recrutada, e sem alegar representatividade estatística.
+A aplicação foi realizada por meio de formulário eletrônico composto por oito perguntas e uma pergunta inicial de consentimento.
 
-**Meio sugerido:** Google Forms, Microsoft Forms ou formulário equivalente. A ferramenta efetivamente utilizada deve ser registrada após a aplicação. O questionário pode ser aplicado em entrevista assistida, desde que essa modalidade seja declarada corretamente.
+A coleta ocorreu entre 13 e 17 de novembro de 2026.
 
-**Orientação de privacidade:** explicar a finalidade acadêmica, a voluntariedade e o uso agregado/anônimo das respostas. Evitar coletar nome, CPF, telefone, e-mail, estabelecimento identificável ou segredos comerciais, pois não são necessários para estas perguntas. Antes de divulgar respostas textuais, revisar possíveis identificadores.
+Foram recebidos cinco registros de participação. Quatro participantes concordaram voluntariamente com a utilização acadêmica das respostas, enquanto uma pessoa não consentiu e teve seu registro excluído da análise.
 
-**Estado atual:** **PLANEJADO — SEM RESPOSTAS DOCUMENTADAS**.
+Todos os quatro participantes consentidos declararam possuir experiência direta com controle de estoque.
 
-### 4.2 Roteiro de perguntas
+A amostra é exploratória e não possui representatividade estatística.
 
-O roteiro abaixo preserva as oito perguntas previstas em `docs/elicitacao-escopo.md`.
+**Cuidados de interpretação:**
 
-| ID   | Pergunta                                                                  | Formato sugerido               | Requisitos a investigar |
-| ---- | ------------------------------------------------------------------------- | ------------------------------ | ----------------------- |
-| Q-01 | Como você registra hoje entradas e saídas de estoque?                     | Resposta aberta                | RF-05, RF-06, RF-07     |
-| Q-02 | Com que frequência confere fisicamente o estoque?                         | Escolha única + campo opcional | RF-10, RF-11            |
-| Q-03 | Quais são os três erros mais comuns no processo?                          | Resposta aberta                | RF-07, RF-10, RF-13     |
-| Q-04 | Quando uma entrada é lançada incorretamente, como realiza a correção?     | Resposta aberta                | RF-13                   |
-| Q-05 | Quais alertas seriam mais úteis para evitar falta de mercadoria?          | Resposta aberta                | RF-10, RF-11            |
-| Q-06 | Costuma utilizar planilhas, sistema de vendas ou anotações manuais?       | Múltipla escolha               | RF-08, RF-09            |
-| Q-07 | Qual informação do dashboard ajudaria sua rotina?                         | Resposta aberta                | RF-11                   |
-| Q-08 | A previsão de demanda seria útil? Que dados históricos estão disponíveis? | Resposta aberta em duas partes | RF-12                   |
+- Uma resposta apresentou a palavra "teste" no campo de registro de entradas e saídas. Esse campo não foi utilizado como descrição válida do processo do participante.
+- Uma resposta relacionada ao SAP apresentou informações ambíguas nas perguntas sobre dashboard e previsão.
+- O registro relacionado ao DataCash apresentou problemas de formatação na exportação, limitando a interpretação de algumas respostas posteriores.
 
-**Opções sugeridas para Q-02:** diariamente, algumas vezes por semana, semanalmente, quinzenalmente, mensalmente, outra frequência (informar).
+**Estado atual:** QUESTIONÁRIO APLICADO — RESULTADOS ANALISADOS.
 
-**Opções sugeridas para Q-06:** planilha eletrônica; software de vendas/ERP; anotações em papel; aplicativos de mensagens; outro; mais de uma opção. Não presumir que o entrevistado usa alguma dessas ferramentas.
+A síntese completa encontra-se em [`validacao-as11.md`](validacao-as11.md).
 
-**Metadados mínimos a registrar fora das respostas públicas:** data de aplicação, quantidade de participantes e perfis profissionais agregados. Não inventar nenhum desses valores.
+| ID   | Pergunta                                                                                                                                                                 | Formato         |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
+| Q-01 | Como você registra hoje entradas e saídas de estoque?                                                                                                                    | Resposta aberta |
+| Q-02 | Com que frequência você confere fisicamente o estoque?                                                                                                                   | Escolha única   |
+| Q-03 | Quais são os três erros mais comuns no processo de controle de estoque?                                                                                                  | Resposta aberta |
+| Q-04 | Quando uma entrada é lançada incorretamente, como você realiza a correção?                                                                                               | Resposta aberta |
+| Q-05 | Quais alertas seriam mais úteis para evitar falta de mercadoria?                                                                                                         | Resposta aberta |
+| Q-06 | Quais ferramentas você costuma utilizar no controle de estoque?                                                                                                          | Resposta aberta |
+| Q-07 | Qual informação em um painel (dashboard) ajudaria sua rotina?                                                                                                            | Resposta aberta |
+| Q-08 | Você considera útil ter um sistema que analise vendas anteriores e estime quais produtos precisarão ser repostos? O estabelecimento possui registros de vendas passadas? | Resposta aberta |
 
-### 4.3 Procedimento de aplicação
+### 4.3 Procedimento realizado
 
-1. Revisar perguntas com a equipe e confirmar a finalidade acadêmica.
-2. Selecionar voluntários com vivência no controle de estoque; registrar critério de seleção e número real de participantes.
-3. Informar a finalidade, o caráter voluntário e a forma de tratamento das respostas.
-4. Aplicar as oito perguntas com redação consistente entre participantes.
-5. Exportar respostas ou preservar registros em local de acesso restrito quando houver conteúdo pessoal ou empresarial sensível.
-6. Produzir um **resumo anônimo**, sem inserir dados identificáveis ou respostas brutas sensíveis no repositório público.
-7. Identificar temas recorrentes e divergências sem atribuir representatividade estatística.
-8. Vincular achados reais aos RFs e registrar se geram inclusão, alteração ou confirmação de requisito.
-9. Registrar decisões da equipe, autores da validação e data.
+1. Foi apresentado aos participantes um questionamento inicial de consentimento voluntário.
+2. Os registros sem consentimento foram excluídos da análise.
+3. Foram consideradas as respostas dos participantes que declararam possuir experiência direta com controle de estoque.
+4. As respostas foram organizadas por pergunta e analisadas de forma agregada.
+5. Foram identificados temas recorrentes e dificuldades relatadas.
+6. Os achados foram relacionados aos requisitos funcionais existentes.
+7. Respostas ambíguas ou comprometidas pela formatação foram identificadas e não utilizadas para conclusões que exigissem maior precisão.
+8. Os resultados foram consolidados em [`validacao-as11.md`](validacao-as11.md).
 
-### 4.4 Ficha de execução — preencher após a aplicação
+A análise não teve como objetivo criar novos requisitos automaticamente, mas verificar a coerência entre as necessidades relatadas e a proposta já documentada.
 
-| Campo                                                  | Informação real |
-| ------------------------------------------------------ | --------------- |
-| Meio de aplicação                                      | PENDENTE        |
-| Data ou período da coleta                              | PENDENTE        |
-| Participantes convidados                               | PENDENTE        |
-| Respostas válidas obtidas                              | PENDENTE        |
-| Critério de seleção                                    | PENDENTE        |
-| Perfil agregado dos participantes                      | PENDENTE        |
-| Responsável pela coleta                                | PENDENTE        |
-| Local seguro de armazenamento das respostas brutas     | PENDENTE        |
-| Evidência pública anonimizável (arquivo/link/registro) | PENDENTE        |
-| Limitações da coleta                                   | PENDENTE        |
+### 4.4 Ficha de execução
 
-### 4.5 Quadro de síntese dos resultados — não preencher antes da coleta
+| Campo                                           | Informação                                                                                          |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Meio de aplicação                               | Formulário eletrônico                                                                               |
+| Plataforma específica                           | Google Forms                                                                                        |
+| Período da coleta                               | 13/11/2026 a 17/11/2026                                                                             |
+| Registros recebidos                             | 5                                                                                                   |
+| Participantes consentidos                       | 4                                                                                                   |
+| Registros excluídos por falta de consentimento  | 1                                                                                                   |
+| Participantes com experiência direta em estoque | 4                                                                                                   |
+| Perfil agregado                                 | 2 operadores/responsáveis pelo estoque, 1 gerente/gestor e 1 participante que preferiu não informar |
+| Responsável pela consolidação                   | AS-11 — Ikaro Guilherme                                                                             |
+| Evidência de análise                            | [`validacao-as11.md`](validacao-as11.md)                                                            |
+| Limitações                                      | Amostra reduzida, respostas ambíguas e problemas de formatação na exportação                        |
 
-| Tema investigado                 | Resultado observado | Nº de participantes que citaram, quando aplicável | RF(s) associado(s) | Decisão tomada | Evidência   |
-| -------------------------------- | ------------------- | ------------------------------------------------- | ------------------ | -------------- | ----------- |
-| Registro de entradas e saídas    | NÃO COLETADO        | PENDENTE                                          | RF-05/06/07        | PENDENTE       | EV-PENDENTE |
-| Frequência da conferência        | NÃO COLETADO        | PENDENTE                                          | RF-10/11           | PENDENTE       | EV-PENDENTE |
-| Erros de lançamento              | NÃO COLETADO        | PENDENTE                                          | RF-07/13           | PENDENTE       | EV-PENDENTE |
-| Correção de entradas             | NÃO COLETADO        | PENDENTE                                          | RF-13              | PENDENTE       | EV-PENDENTE |
-| Alertas desejados                | NÃO COLETADO        | PENDENTE                                          | RF-10              | PENDENTE       | EV-PENDENTE |
-| Ferramentas atualmente usadas    | NÃO COLETADO        | PENDENTE                                          | RF-08/09           | PENDENTE       | EV-PENDENTE |
-| Informação prioritária no painel | NÃO COLETADO        | PENDENTE                                          | RF-11              | PENDENTE       | EV-PENDENTE |
-| Previsão e histórico disponível  | NÃO COLETADO        | PENDENTE                                          | RF-12              | PENDENTE       | EV-PENDENTE |
+A exportação original deverá permanecer sob acesso restrito da equipe, sem inclusão de respostas brutas identificáveis no repositório público.
+
+### 4.5 Síntese dos resultados
+
+| Tema investigado              | Resultado observado                                                                                                | Requisitos relacionados     | Evidência         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------- | ----------------- |
+| Registro de entradas e saídas | Foram identificadas planilhas, sistemas internos e ferramentas específicas; uma resposta não descreveu o processo. | RF-05, RF-06, RF-07         | validacao-as11.md |
+| Frequência de conferência     | 4 de 4 participantes relataram conferência diária.                                                                 | RF-10, RF-11                | validacao-as11.md |
+| Erros operacionais            | Foram relatados erros de contagem, cadastro, movimentação, validade e organização.                                 | RF-05, RF-06, RF-07         | validacao-as11.md |
+| Correção de entradas          | Foram descritos procedimentos de conferência, comparação com nota fiscal e correção no registro.                   | RF-13                       | validacao-as11.md |
+| Alertas desejados             | Dois participantes mencionaram estoque mínimo.                                                                     | RF-10                       | validacao-as11.md |
+| Ferramentas utilizadas        | Planilhas, SAP/Disklog, sistema interno e DataCash foram mencionados.                                              | Contextualização da solução | validacao-as11.md |
+| Informações do dashboard      | Quantidades disponíveis, saídas recentes e produtos para reposição foram mencionados.                              | RF-11                       | validacao-as11.md |
+| Previsão e histórico          | Dois participantes responderam explicitamente de forma favorável à previsão de demanda.                            | RF-12                       | validacao-as11.md |
+
+**Interpretação:** os resultados oferecem evidências qualitativas de necessidade para os requisitos relacionados a movimentações, histórico, alertas, dashboard e previsão de demanda. Não representam comprovação de implementação ou eficácia da aplicação.
 
 ## 5. Consolidação das técnicas
 
-**Análise documental:** fornece evidências sobre contratos e comportamentos existentes nas referências. Limite: não comprova que potenciais usuários valorizem essas funcionalidades ou as utilizem de determinada maneira.
+A elicitação do AutoStock Intelligence reúne duas técnicas documentadas:
 
-**Questionário:** poderá oferecer dados exploratórios da experiência de usuários, mas sua interpretação depende de aplicação real. Limite: uma amostra pequena, especialmente por conveniência, não autoriza conclusões gerais sobre o mercado.
+**Técnica A — Análise documental:** registrada na preparação da AS-01, com análise de documentos, estruturas, contratos e projetos de referência relacionados ao controle de estoque.
 
-**Triangulação prevista:** comparar necessidades apontadas por usuários com os requisitos baseados na análise documental. Divergências deverão ser registradas e discutidas; não forçar resultados a confirmar uma solução predefinida.
+**Técnica B — Questionário:** aplicado entre 13 e 17 de novembro de 2026, com quatro participantes consentidos e experiência direta com controle de estoque.
+
+A análise documental fornece referências sobre estruturas e comportamentos técnicos. O questionário apresenta relatos de experiências práticas e necessidades operacionais.
+
+A comparação entre essas fontes permite relacionar a proposta técnica às dificuldades relatadas pelos participantes.
+
+Os resultados do questionário reforçam a pertinência dos requisitos de movimentação, histórico, alertas, dashboard e previsão de demanda.
+
+A análise não comprova a necessidade de todas as funcionalidades de forma individual. Requisitos de importação e webhooks, por exemplo, permanecem fundamentados principalmente nas decisões técnicas e no escopo documental do projeto.
 
 ## 6. Transformação dos achados em requisitos
 
-Quando houver respostas reais, registrar cada achado relevante neste formato:
+A pesquisa foi utilizada para verificar a coerência dos requisitos existentes com as necessidades relatadas.
 
-| ID do achado | Técnica     | Resumo objetivo do dado observado | Requisito relacionado | Ação (manter/alterar/criar/descartar) | Decisão e justificativa | Responsável/data |
-| ------------ | ----------- | --------------------------------- | --------------------- | ------------------------------------- | ----------------------- | ---------------- |
-| ACH-001      | A preencher | A preencher                       | A preencher           | A preencher                           | A preencher             | A preencher      |
+| ID do achado | Técnica      | Resumo do dado observado                                        | Requisito relacionado | Ação                   | Justificativa                                                                                |
+| ------------ | ------------ | --------------------------------------------------------------- | --------------------- | ---------------------- | -------------------------------------------------------------------------------------------- |
+| ACH-01       | Questionário | Conferência física diária relatada por 4 participantes          | RF-10, RF-11          | Confirmar              | Demonstra necessidade de acompanhamento e indicadores                                        |
+| ACH-02       | Questionário | Erros de contagem, cadastro e movimentação                      | RF-05, RF-06, RF-07   | Confirmar              | Reforça a necessidade de registros consistentes                                              |
+| ACH-03       | Questionário | Procedimentos manuais para corrigir divergências                | RF-13                 | Confirmar              | Sustenta a necessidade de correções rastreáveis                                              |
+| ACH-04       | Questionário | Interesse em estoque mínimo                                     | RF-10                 | Confirmar              | Sustenta o monitoramento de produtos que exigem reposição                                    |
+| ACH-05       | Questionário | Interesse em informações de quantidade e movimentações recentes | RF-11                 | Confirmar              | Sustenta a proposta de dashboard                                                             |
+| ACH-06       | Questionário | Respostas favoráveis à análise histórica e previsão             | RF-12                 | Confirmar parcialmente | Sustenta a investigação, mas não comprova a disponibilidade de dados ou a precisão do modelo |
 
-**Controle de mudanças:** novas necessidades devem ser comparadas aos RF-01 a RF-13, RNF-01 a RNF-05 e à priorização MoSCoW já documentada. Quando aprovadas, atualizar a especificação, as histórias de usuário, as Issues e a matriz de rastreabilidade, preservando a justificativa da alteração.
+**Decisão:** a pesquisa não gerou novos requisitos funcionais. Os achados foram utilizados para fundamentar e confirmar qualitativamente a proposta existente.
+
+Qualquer alteração futura de escopo deverá passar pela revisão da equipe e atualização das Issues correspondentes.
 
 ## 7. Evidências e rastreabilidade acadêmica
 
@@ -183,15 +205,13 @@ Para cada técnica, registrar:
 - [x] Objetivo e procedimentos de duas técnicas descritos na minuta.
 - [x] Análise documental inicial relacionada a RFs e regras de negócio.
 - [x] Questionário de oito perguntas preparado.
-- [ ] Autor, data, referências e evidências da análise documental confirmados.
-- [ ] Questionário efetivamente aplicado ou segunda técnica efetivamente executada.
-- [ ] Quantidade real e perfil agregado dos participantes registrados.
-- [ ] Respostas resumidas anonimamente, com fonte verificável.
-- [ ] Achados relacionados a RFs e decisões da equipe.
-- [ ] Revisão e validação acadêmica/documental pela equipe.
-- [ ] Matriz de rastreabilidade atualizada conforme as decisões aprovadas.
-
-A primeira versão deste arquivo é uma **minuta de planejamento e consolidação**. Não declarar a exigência de duas técnicas realizadas como concluída antes da obtenção das evidências.
+- [x] Autor, data, referências e evidências da análise documental confirmados.
+- [x] Questionário efetivamente aplicado ou segunda técnica efetivamente executada.
+- [x] Quantidade real e perfil agregado dos participantes registrados.
+- [x] Respostas resumidas anonimamente, com fonte verificável.
+- [x] Achados relacionados a RFs e decisões da equipe.
+- [x] Revisão e validação acadêmica/documental pela equipe.
+- [x] Matriz de rastreabilidade atualizada conforme as decisões aprovadas.
 
 ## 9. Referências internas
 
