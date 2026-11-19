@@ -411,3 +411,70 @@ def test_api_nao_pode_desativar_ultimo_admin_ativo(client):
     )
 
     assert response.status_code == 409
+
+# =========================================================
+# TESTES DE LOGIN E VALIDACAO DE TOKENS
+# =========================================================
+
+def test_login_com_credenciais_validas(client):
+    response = client["client"].post(
+        "/auth/login",
+        json={
+            "email": "admin@teste.local",
+            "password": "SenhaAdmin123!",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["token_type"] == "bearer"
+    assert response.json()["access_token"]
+    assert response.json()["user"]["papel"] == "ADMIN"
+
+
+@pytest.mark.parametrize(
+    "email,password",
+    [
+        ("admin@teste.local", "SenhaErrada123!"),
+        ("inexistente@teste.local", "SenhaAdmin123!"),
+    ],
+)
+def test_login_com_credenciais_invalidas(client, email, password):
+    response = client["client"].post(
+        "/auth/login",
+        json={
+            "email": email,
+            "password": password,
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "E-mail ou senha inválidos."
+
+
+def test_acesso_com_jwt_malformado_retorna_401(client):
+    response = client["client"].get(
+        "/auth/me",
+        headers={
+            "Authorization": "Bearer token-invalido",
+        },
+    )
+
+    assert response.status_code == 401
+
+
+def test_acesso_com_jwt_expirado_retorna_401(client):
+    from datetime import timedelta
+
+    token = create_access_token(
+        client["admin"]["id"],
+        expires_delta=timedelta(seconds=-1),
+    )
+
+    response = client["client"].get(
+        "/auth/me",
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+    )
+
+    assert response.status_code == 401
