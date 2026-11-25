@@ -32,6 +32,7 @@ def test_database_initialization(tmp_path):
             "movimentacoes_estoque",
             "eventos_webhook",
             "sincronizacoes",
+            "usuarios",
         }
 
         assert tables == expected
