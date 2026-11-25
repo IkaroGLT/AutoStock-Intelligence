@@ -1,91 +1,175 @@
-# AutoStock Intelligence — Matriz de permissões (RBAC)
+# Matriz de Permissões — AutoStock Intelligence
 
-**Versão:** 0.2 — proposta para revisão e aprovação na AS-01  
-**Data da proposta:** 08/11/2026  
-**Relacionados:** RF-01, RF-02, RF-13, RNF-02; AS-01, AS-03, AS-04, AS-05 e AS-09  
-**Status:** especificado para revisão; ainda não implementado.
+**Versão:** 0.3 
+**Data da proposta:** 25/11/2026  
+**Relacionados:** RF-01, RF-02, RF-13, RNF-02; AS-01, AS-03, AS-04, AS-05 e AS-09  
 
 ## 1. Objetivo
 
-Definir quais operações cada perfil pode executar, protegendo alterações críticas de estoque e garantindo que as permissões sejam verificadas **no backend**. Ocultar botões no React é apenas medida de usabilidade, não uma barreira de segurança.
+Este documento apresenta a matriz de permissões do AutoStock Intelligence, definindo quais ações estão associadas a cada papel de usuário.
 
-## 2. Atores
+O controle de acesso utiliza RBAC (Role-Based Access Control), permitindo que as permissões sejam organizadas conforme o papel atribuído ao usuário.
 
-- **Administrador:** gerencia usuários e parâmetros, executa operações de estoque e realiza correções auditáveis.
-- **Operador:** consulta informações, cadastra produtos e registra entradas e saídas de rotina, sem privilégios administrativos.
-- **Cliente de integração (não humano):** envia eventos autenticados por credencial própria, distinta do login humano. Não herda o papel de Administrador ou Operador.
+A implementação está centralizada no módulo:
 
-Não haverá cadastro público de usuários nesta primeira versão. Contas são provisionadas por um Administrador, conforme projeto da AS-03. O mecanismo de sessão/token do login humano será detalhado na AS-03.
+```text
+backend/app/auth/permissions.py
+```
 
-## 3. Matriz proposta
+## 2. Papéis disponíveis
 
-**Legenda:** ✅ permitido, ❌ negado, 🔑 credencial exclusiva de integração.
+O sistema possui dois papéis de usuário:
 
-| Permissão / ação | Administrador | Operador | Integração externa |
-|---|:---:|:---:|:---:|
-| Entrar no sistema com credenciais de usuário | ✅ | ✅ | ❌ |
-| Consultar produtos e estoque | ✅ | ✅ | ❌ |
-| Cadastrar produtos e editar dados cadastrais | ✅ | ✅ | ❌ |
-| Modificar preços e parâmetros de estoque mínimo | ✅ | ❌ | ❌ |
-| Registrar entrada manual | ✅ | ✅ | ❌ |
-| Registrar saída manual | ✅ | ✅ | ❌ |
-| Consultar histórico e auditoria operacional | ✅ | ✅ | ❌ |
-| **Corrigir lançamento manual de entrada (RF-13)** | **✅** | **❌** | **❌** |
-| Ajustar saldo após inventário físico | ✅ | ❌ | ❌ |
-| Importar CSV/XLSX | ✅ | ❌ | ❌ |
-| Consultar dashboard, alertas e previsões | ✅ | ✅ | ❌ |
-| Consultar estado e erros de sincronização | ✅ | ❌ | ❌ |
-| Gerenciar usuários e perfis | ✅ | ❌ | ❌ |
-| Receber/enviar eventos pelo endpoint de webhook | ❌ | ❌ | 🔑 |
-| Editar ou apagar movimentos históricos | ❌ | ❌ | ❌ |
+| Papel    | Descrição                                                                                                 |
+| -------- | --------------------------------------------------------------------------------------------------------- |
+| ADMIN    | Administrador responsável pelo gerenciamento de usuários e pelas permissões administrativas configuradas. |
+| OPERADOR | Usuário destinado às operações cotidianas, com acesso limitado às funcionalidades permitidas.             |
 
-A permissão de correção RF-13 é propositalmente distinta da permissão de registrar entradas/saídas. Não permitir que um perfil sem `stock:correction:create` altere o saldo usando caminhos alternativos de ajuste ou exclusão.
+## 3. Matriz de permissões
 
-## 4. Permissões técnicas sugeridas
+A tabela apresenta as permissões configuradas atualmente no sistema.
 
-| Permissão interna | Ação |
-|---|---|
-| `products:read` | Consultar produtos e saldos |
-| `products:write` | Cadastrar e editar campos cadastrais |
-| `products:commercial:write` | Alterar preços e parâmetros sensíveis |
-| `stock:movement:create` | Registrar entradas e saídas manuais |
-| `stock:history:read` | Consultar histórico |
-| `stock:correction:create` | Corrigir lançamento de entrada (RF-13) |
-| `stock:adjustment:create` | Ajuste de inventário físico |
-| `imports:run` | Importar planilhas |
-| `reports:read` | Consultar indicadores, alertas e previsões |
-| `sync:read` | Consultar detalhes de integrações |
-| `users:manage` | Gerenciar contas e perfis |
-| `webhook:ingest` | Enviar evento autenticado por token de integração |
+| Permissão                   | ADMIN | OPERADOR |
+| --------------------------- | :---: | :------: |
+| `products:read`             |  Sim  |   Sim    |
+| `products:write`            |  Sim  |   Sim    |
+| `products:commercial:write` |  Sim  |   Não    |
+| `stock:movement:create`     |  Sim  |   Sim    |
+| `stock:history:read`        |  Sim  |   Sim    |
+| `stock:correction:create`   |  Sim  |   Não    |
+| `stock:adjustment:create`   |  Sim  |   Não    |
+| `imports:run`               |  Sim  |   Não    |
+| `reports:read`              |  Sim  |   Sim    |
+| `sync:read`                 |  Sim  |   Não    |
+| `users:manage`              |  Sim  |   Não    |
 
-Estas strings são **identificadores propostos**, não código já implementado.
+## 4. Descrição das permissões
 
-## 5. Controles obrigatórios
+| Permissão                   | Descrição                                      |
+| --------------------------- | ---------------------------------------------- |
+| `products:read`             | Consultar informações de produtos.             |
+| `products:write`            | Criar ou atualizar informações de produtos.    |
+| `products:commercial:write` | Alterar informações comerciais de produtos.    |
+| `stock:movement:create`     | Registrar movimentações de estoque.            |
+| `stock:history:read`        | Consultar o histórico de movimentações.        |
+| `stock:correction:create`   | Registrar correções de estoque.                |
+| `stock:adjustment:create`   | Realizar ajustes de estoque.                   |
+| `imports:run`               | Executar processos de importação.              |
+| `reports:read`              | Consultar relatórios.                          |
+| `sync:read`                 | Consultar informações de sincronização.        |
+| `users:manage`              | Gerenciar usuários e seus respectivos acessos. |
 
-1. O backend identifica o usuário a partir da sessão/token autenticado, **nunca** de um `usuario_id` informado pelo navegador.
-2. Falta de autenticação → `401`; usuário autenticado sem permissão → `403`.
-3. Toda rota que altera estoque verifica também as regras de negócio, saldo e auditoria.
-4. `RF-13` é permitido somente para **Administrador** no MVP.
-5. Endpoints de integração mantêm autenticação independente e escopo específico, sem reutilização do login humano.
-6. Segredos e tokens reais não devem entrar no Git, logs ou exemplos publicados.
-7. O Administrador também está sujeito a regras de saldo, integridade, idempotência e preservação de histórico.
+## 5. Implementação no backend
 
-## 6. Rastreabilidade e testes
+As permissões são centralizadas na estrutura `ROLE_PERMISSIONS`, permitindo associar cada papel às permissões correspondentes.
 
-| Regra | Issue | Validação prevista |
-|---|---|---|
-| Autenticação e papéis | AS-03 | 401/403; perfis válidos/inválidos |
-| Visibilidade de ações na UI | AS-04 | Testes de interface por papel |
-| Proteção da API de correção | AS-05 | Administrador autorizado; Operador 403 |
-| Integridade e não exclusão | AS-05, AS-09 | Testes de saldo, auditoria e duplicidade |
-| Credencial separada de webhook | AS-03, AS-06 | Rejeição de credencial incorreta |
+O mecanismo de autorização utiliza dependências implementadas em:
 
-## 7. Decisão e aprovação
+```text
+backend/app/auth/dependencies.py
+backend/app/auth/permissions.py
+```
 
-- **Decisão proposta:** correção de lançamento e ajuste por inventário físico restritos ao Administrador; Operador pode registrar entradas/saídas comuns.
-- [ ] Revisada com o responsável do projeto.
-- [ ] Revisada com o responsável pela AS-03.
-- [ ] Aprovada no Pull Request de documentação da AS-01.
-- [ ] Registrado o nome e a data da aprovação.
+O controle de acesso é aplicado às rotas por meio das dependências de autenticação e autorização.
 
-**Observação:** qualquer mudança de permissões depois desta aprovação deverá atualizar este documento, os testes e as Issues correspondentes.
+### Permissões atualmente conectadas
+
+Na implementação atual da AS-03, a permissão `users:manage` está conectada às rotas administrativas de gerenciamento de usuários.
+
+| Endpoint                       | Método | Permissão exigida |
+| ------------------------------ | ------ | ----------------- |
+| `/auth/users`                  | GET    | `users:manage`    |
+| `/auth/users`                  | POST   | `users:manage`    |
+| `/auth/users/{user_id}/role`   | PATCH  | `users:manage`    |
+| `/auth/users/{user_id}/status` | PATCH  | `users:manage`    |
+
+As rotas administrativas também exigem que o usuário esteja autenticado e ativo.
+
+### Permissões ainda não conectadas aos módulos operacionais
+
+As permissões de produtos, estoque, importações, relatórios e sincronizações já estão definidas na estrutura centralizada, mas sua aplicação depende da implementação e proteção dos respectivos endpoints.
+
+Portanto, não se deve interpretar a presença dessas permissões na matriz como comprovação de que todos os módulos operacionais já possuem controle de acesso implementado.
+
+Essa integração deve ocorrer conforme os módulos forem desenvolvidos.
+
+## 6. Regras de segurança
+
+O sistema deve respeitar as seguintes regras:
+
+1. Todo endpoint protegido deve exigir autenticação.
+2. O usuário deve possuir um token JWT válido.
+3. O usuário deve estar ativo no banco de dados.
+4. A permissão necessária deve estar associada ao papel do usuário.
+5. Usuários sem a permissão necessária não devem executar a operação.
+6. O gerenciamento de usuários deve ser restrito ao papel ADMIN.
+7. O sistema deve preservar a existência de pelo menos um administrador ativo.
+
+## 7. Respostas de autorização
+
+A API utiliza os seguintes códigos HTTP para situações relacionadas ao controle de acesso:
+
+| Código           | Situação                                                         |
+| ---------------- | ---------------------------------------------------------------- |
+| 401 Unauthorized | Usuário não autenticado, token ausente ou token inválido.        |
+| 403 Forbidden    | Usuário autenticado, mas sem permissão para executar a operação. |
+
+Outros códigos podem ser retornados conforme a validação dos dados e as regras de negócio.
+
+## 8. Autenticação de webhooks
+
+Os webhooks não utilizam os papéis ADMIN e OPERADOR.
+
+O recebimento de eventos externos utiliza uma credencial independente:
+
+```text
+AUTOSTOCK_WEBHOOK_TOKEN
+```
+
+A autenticação é realizada por meio do cabeçalho:
+
+```http
+X-Webhook-Token: SEU_TOKEN
+```
+
+Endpoint:
+
+```http
+POST /webhooks/events
+```
+
+Essa separação evita que a credencial de integração externa seja confundida com os tokens JWT utilizados pelos usuários humanos.
+
+A documentação complementar está disponível em:
+
+```text
+docs/seguranca-integracoes.md
+```
+
+## 9. Evolução da matriz
+
+Com a implementação dos módulos operacionais, as permissões deverão ser conectadas aos respectivos endpoints.
+
+A evolução deve considerar:
+
+- Controle de acesso às operações de produtos.
+- Restrição de correções e ajustes de estoque.
+- Proteção das operações de importação.
+- Controle de acesso aos relatórios.
+- Restrição das consultas de sincronização.
+- Revisão da matriz conforme novos papéis ou requisitos forem adicionados.
+
+Qualquer alteração na matriz deve ser acompanhada de testes automatizados que comprovem os acessos permitidos e negados.
+
+## 10. Referências no projeto
+
+Arquivos relacionados:
+
+```text
+backend/app/auth/permissions.py
+backend/app/auth/dependencies.py
+backend/app/auth/router.py
+backend/app/auth/service.py
+backend/tests/test_auth.py
+docs/seguranca-autenticacao.md
+```
