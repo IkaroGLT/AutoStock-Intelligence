@@ -17,6 +17,7 @@ O projeto está sendo desenvolvido de forma incremental, com módulos separados 
 | Backend — FastAPI          | Estrutura e funcionalidades iniciais implementadas                  |
 | Autenticação e autorização | Implementação da AS-03 realizada                                    |
 | Banco de dados SQLite      | Estrutura inicial implementada                                      |
+| Importação de estoque      | Importação CSV/XLSX e histórico implementados                       |
 | Webhooks                   | Recebimento, autenticação e registro de eventos implementados       |
 | Frontend                   | Interface demonstrativa implementada                                |
 | Integração Frontend/API    | Em desenvolvimento                                                  |
@@ -55,7 +56,14 @@ AutoStock-Intelligence/
 │   │   │   ├── router.py
 │   │   │   ├── security.py
 │   │   │   └── service.py
+│   │   │── imports/
+│   │   │   ├── __init__.py
+│   │   │   ├── router.py
+│   │   │   └── service.py
 │   │   │
+│   │   ├── stock/
+│   │   │   ├── __init__.py
+│   │   │   └── service.py
 │   │   ├── db/
 │   │   │   ├── config.py
 │   │   │   ├── connection.py
@@ -262,9 +270,39 @@ A autenticação de usuários utiliza JWT, com controle de acesso baseado em pap
 - Segredo JWT fornecido por variável de ambiente.
 - Proteção independente para autenticação de Webhooks.
 
+## Importação de estoque
+
+O módulo de importações permite cadastrar e atualizar produtos por arquivos CSV e XLSX.
+
+### Endpoint de importação
+
+`POST /importacoes`
+
+Requer autenticação e permissão `imports:run`.
+
+### Endpoint de histórico
+
+`GET /importacoes`
+
+Requer autenticação e permissão `sync:read`.
+
+Permite consultar o histórico das importações CSV e XLSX, com paginação por meio dos parâmetros `limite` e `deslocamento`.
+
+### Regras da importação
+
+- Arquivos CSV com codificação UTF-8.
+- Arquivos XLSX com leitura da primeira planilha.
+- Limite máximo de 5 MB.
+- Colunas obrigatórias: `sku`, `nome`, `categoria`, `preco_custo`, `preco_venda`, `quantidade`, `estoque_minimo` e `ativo`.
+- SKUs duplicados no mesmo arquivo são rejeitados.
+- Produtos existentes têm seus dados cadastrais atualizados, mas preservam o saldo atual.
+- Produtos novos recebem seu estoque inicial por meio do serviço central de movimentações.
+- A importação é transacional: falhas provocam rollback.
+- O histórico é registrado na tabela `sincronizacoes`.
+
 ## Webhooks
 
-O módulo de Webhooks permite receber eventos externos relacionados às movimentações do sistema.
+Os eventos recebidos são registrados e processados conforme o contrato de integração. Eventos válidos podem gerar movimentações de entrada ou saída, com prevenção de duplicidade e registro do resultado do processamento.
 
 ### Endpoint
 
