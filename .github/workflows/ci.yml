@@ -7,7 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test-backend:
+  test-backend-e-ml:
+    name: Testes Backend & ML (Python)
     runs-on: ubuntu-latest
     steps:
       - name: Obter código do repositório
@@ -17,16 +18,46 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Instalar dependências do Backend
         run: |
-          cd backend
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r backend/requirements.txt
           pip install pytest pytest-cov
 
-      - name: Executar testes com SKUs isolados e verificar cobertura
+      - name: Executar testes do Backend (AS-09 / RF-13)
         run: |
           cd backend
           python -m pytest tests/test_autostock_regras.py --cov=app --cov-report=term-missing
+
+      - name: Executar testes de estrutura de ML
+        run: |
+          cd ml
+          python -m pytest tests/test_ml_estrutura.py
+
+  test-frontend:
+    name: Lint & Build Frontend (React/Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter código do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências do Frontend
+        run: |
+          cd frontend
+          npm install
+
+      - name: Verificar qualidade de código (ESLint)
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Validar Build de Produção (TypeScript + Vite)
+        run: |
+          cd frontend
+          npm run build
