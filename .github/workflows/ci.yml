@@ -1,0 +1,32 @@
+name: AutoStock CI
+
+on:
+  push:
+    branches: [ main, "feature/*", "test/*", "ci/*" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter código do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependências do Backend
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Executar testes com SKUs isolados e verificar cobertura
+        run: |
+          cd backend
+          python -m pytest tests/test_autostock_regras.py --cov=app --cov-report=term-missing
