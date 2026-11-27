@@ -460,3 +460,25 @@ A evolução do AutoStock-Intelligence contempla:
 **AutoStock-Intelligence**
 
 Sistema inteligente de controle, monitoramento e análise de estoque.
+
+
+
+## 🧪 Testes Automatizados e Integração Contínua (CI)
+
+O projeto conta com uma suíte de testes automatizados e um pipeline de Integração Contínua configurado via **GitHub Actions** (`.github/workflows/ci.yml`), executado automaticamente a cada `push` ou `pull_request`.
+
+### Cobertura do Pipeline
+* **Backend (`backend/tests/test_autostock_regras.py`):** Valida as regras de negócio de movimentação de estoque, alertas de estoque mínimo e isolamento por SKU (`pytest` + `pytest-cov`).
+* **Machine Learning (`ml/tests/test_ml_estrutura.py`):** Garante a integridade da estrutura de diretórios do pipeline de ML (`data`, `preprocessing`, `training`, `inference`).
+* **Frontend (`frontend/`):** Executa verificação estática de código (`npm run lint`) e validação do build de produção em TypeScript + Vite (`npm run build`).
+
+### Como rodar os testes localmente
+```bash
+# Backend
+cd backend
+python -m pytest tests/test_autostock_regras.py --cov=app --cov-report=term-missing
+
+# Machine Learning (estrutura)
+cd ml
+python -m pytest tests/test_ml_estrutura.py
+'''
